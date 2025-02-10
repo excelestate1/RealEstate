@@ -6,15 +6,12 @@ import {
   Typography,
   Box,
   Paper,
-  MenuItem,
 } from "@mui/material";
 
-const Register = () => {
+const Login = () => {
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
-    role: "",
   });
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
@@ -25,9 +22,6 @@ const Register = () => {
 
   useEffect(() => {
     let errors = {};
-    if (!formData.name.trim()) {
-      errors.name = "Full name is required.";
-    }
     if (!formData.email.trim()) {
       errors.email = "Email is required.";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -35,11 +29,6 @@ const Register = () => {
     }
     if (!formData.password) {
       errors.password = "Password is required.";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters.";
-    }
-    if (!formData.role) {
-      errors.role = "Please select a role.";
     }
     setErrors(errors);
     setIsFormValid(Object.keys(errors).length === 0);
@@ -49,18 +38,8 @@ const Register = () => {
     <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
       <Paper elevation={3} sx={{ p: 4, width: 400 }}>
         <Typography variant="h5" align="center" gutterBottom>
-          Register
+          Login
         </Typography>
-        <TextField
-          fullWidth
-          label="Full Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          error={!!errors.name}
-          helperText={errors.name}
-          margin="normal"
-        />
         <TextField
           fullWidth
           label="Email"
@@ -83,30 +62,15 @@ const Register = () => {
           helperText={errors.password}
           margin="normal"
         />
-        <TextField
-          select
-          fullWidth
-          label="Select Role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          error={!!errors.role}
-          helperText={errors.role}
-          margin="normal"
-        >
-          <MenuItem value="buyer">Buyer</MenuItem>
-          <MenuItem value="seller">Seller</MenuItem>
-          <MenuItem value="agent">Agent</MenuItem>
-        </TextField>
         <Button fullWidth variant="contained" color="primary" disabled={!isFormValid} sx={{ mt: 2 }}>
-          Register
+          Login
         </Button>
         <Typography align="center" sx={{ mt: 2 }}>
-          <Link to="/login">Already have an account? Login</Link>
+          <Link to="/register">Don't have an account? Register</Link>
         </Typography>
       </Paper>
     </Box>
   );
 };
 
-export default Register;
+export default Login;

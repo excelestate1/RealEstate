@@ -1,4 +1,4 @@
-import React from "react";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -9,6 +9,7 @@ import Rent from "./Pages/Rent";
 import Sell from "./Pages/Sell";
 import Contact from "./Pages/Contact";
 import { Box } from "@mui/material";
+import Login from './Pages/Login';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Box sx={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/buy" element={<Buy />} />
             <Route path="/rent" element={<Rent />} />
