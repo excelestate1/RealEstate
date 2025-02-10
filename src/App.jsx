@@ -1,14 +1,42 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import Home from "./Pages/Home";
 import Register from "./Pages/Register";
+import Buy from "./Pages/Buy";
+import Rent from "./Pages/Rent";
+import Sell from "./Pages/Sell";
+import Contact from "./Pages/Contact";
+import { Box } from "@mui/material";
 
 function App() {
   return (
-    <Router> {/* ✅ Wrap everything inside Router */}
-      <Routes>
-        <Route path="/" element={<h1>Home Page</h1>} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
+    <Router>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh", // Full-screen height
+          width: "100vw", // Full-screen width
+        }}
+      >
+        <Header /> {/* Navigation Bar */}
+
+        {/* Main Content (Takes remaining height) */}
+        <Box sx={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/buy" element={<Buy />} />
+            <Route path="/rent" element={<Rent />} />
+            <Route path="/sell" element={<Sell />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </Box>
+
+        <Footer /> {/* Footer Section */}
+      </Box>
     </Router>
   );
 }
