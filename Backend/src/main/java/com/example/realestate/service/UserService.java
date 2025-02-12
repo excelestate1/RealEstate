@@ -25,20 +25,26 @@ public class UserService {
         
         return "User registered successfully!";
     }
-    public String loginUser(String email, String password) {
+    public boolean isUserExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    public boolean loginUser(String email, String password) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isEmpty()) {
-            return "User not found!";
+            return false;
         }
 
         User user = userOptional.get();
 
         // Check password
         if (!password.equals(user.getPassword())) {
-            return "Invalid password!";
+            return false;
         }
 
-        return "Login successful!";
+        return true;
     }
+
+
 }

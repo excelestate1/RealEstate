@@ -1,5 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+//import{Link} from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./Pages/Home";
@@ -26,7 +27,9 @@ function App() {
 
         {/* Main Content (Takes remaining height) */}
         <Box sx={{ flex: 1 }}>
-          <Routes>
+ 
+           
+         <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -35,6 +38,8 @@ function App() {
             <Route path="/sell" element={<Sell />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
+       
+          
         </Box>
 
         <Footer /> {/* Footer Section */}
