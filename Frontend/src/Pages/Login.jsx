@@ -17,34 +17,25 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const validateForm = () => {
-    let errors = {};
-    if (!formData.email.trim()) {
-      errors.email = "Email is required.";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Invalid email format.";
-    }
-    if (!formData.password) {
-      errors.password = "Password is required.";
-    }
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return; // Prevent API call if validation fails
-
     try {
       const response = await loginUser(formData.email, formData.password);
-      
+
       if (response.error) {
-        setError(response.error); // Display backend error
+        setError(response.error);
       } else {
-        console.log("Login successful!", response);
-        localStorage.setItem("token", response.token); // Store token if needed
-        navigate("/dashboard"); // Redirect to dashboard after login
+        localStorage.setItem("token", response.token); // Store token
+        localStorage.setItem("role", response.role); // Store role
+
+        if (response.role === "ADMIN") {
+          navigate("/admin");
+        } else if (response.role === "BUYER") {
+          navigate("/buy");
+        } else if (response.role === "SELLER" || response.role === "AGENT") {
+          navigate("/sell");
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -58,28 +49,8 @@ const Login = () => {
           Login
         </Typography>
         <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={!!errors.email}
-            helperText={errors.email}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={!!errors.password}
-            helperText={errors.password}
-            margin="normal"
-          />
+          <TextField fullWidth label="Email" name="email" type="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
+          <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
           <Button fullWidth variant="contained" color="primary" sx={{ mt: 2 }} type="submit">
             Login
           </Button>

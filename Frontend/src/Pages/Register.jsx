@@ -47,7 +47,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isFormValid) return; // Prevent API call if validation fails
+    if (!isFormValid) return;
 
     try {
       const response = await registerUser(formData);
@@ -58,7 +58,7 @@ const Register = () => {
       } else {
         setSuccess("User registered successfully! Redirecting...");
         setError("");
-        setTimeout(() => navigate("/login"), 2000); // Redirect to login after 2 seconds
+        setTimeout(() => navigate("/login"), 2000);
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -72,52 +72,13 @@ const Register = () => {
           Register
         </Typography>
         <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Full Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            error={!!errors.name}
-            helperText={errors.name}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={!!errors.email}
-            helperText={errors.email}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={!!errors.password}
-            helperText={errors.password}
-            margin="normal"
-          />
-          <TextField
-            select
-            fullWidth
-            label="Select Role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            error={!!errors.role}
-            helperText={errors.role}
-            margin="normal"
-          >
-           <MenuItem value="BUYER">Buyer</MenuItem>
-           <MenuItem value="SELLER">Seller</MenuItem>
-           <MenuItem value="ADMIN">Admin</MenuItem>
+          <TextField fullWidth label="Full Name" name="name" value={formData.name} onChange={handleChange} error={!!errors.name} margin="normal" />
+          <TextField fullWidth label="Email" name="email" type="email" value={formData.email} onChange={handleChange} error={!!errors.email} margin="normal" />
+          <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} margin="normal" />
+          <TextField select fullWidth label="Select Role" name="role" value={formData.role} onChange={handleChange} error={!!errors.role}  margin="normal">
+            <MenuItem value="BUYER">Buyer</MenuItem>
+            <MenuItem value="SELLER">Seller</MenuItem>
+            <MenuItem value="AGENT">Agent</MenuItem>
           </TextField>
           <Button fullWidth variant="contained" color="primary" sx={{ mt: 2 }} type="submit" disabled={!isFormValid}>
             Register
