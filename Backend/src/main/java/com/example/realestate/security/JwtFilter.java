@@ -1,60 +1,59 @@
 package com.example.realestate.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.example.realestate.model.User;
+import com.example.realestate.repository.UserRepository;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @Component
-public class JwtFilter implements HandlerInterceptor {
-
+public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        System.out.println("🔍 Authorization Header: " + authHeader); // Debugging
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        String authorizationHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("❌ Missing or Invalid Token!");
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.getWriter().write("Missing or invalid token");
-            return false;
+        String token = null;
+        String email = null;
+
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+            email = jwtUtil.extractUsername(token);
         }
 
-        String token = authHeader.substring(7);
-        System.out.println("🔑 Extracted Token: " + token); // Debugging
-
-        try {
-            if (!jwtUtil.validateToken(token)) {
-                System.out.println("❌ Invalid Token!");
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.getWriter().write("Invalid token");
-                return false;
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            Optional<User> userDetails = userRepository.findByEmail(email);
+            if (userDetails.isPresent() && jwtUtil.validateToken(token, email)) {
+                User user = userDetails.get();
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                user, 
+                                null, 
+                                Collections.singletonList(new SimpleGrantedAuthority(user.getRole())) // Add role
+                        );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-
-            Claims claims = jwtUtil.extractClaims(token);
-            request.setAttribute("email", claims.getSubject());
-            request.setAttribute("role", claims.get("role", String.class));
-
-            System.out.println("✅ User Email: " + claims.getSubject());
-            System.out.println("✅ User Role: " + claims.get("role"));
-
-            return true;
-
-        } catch (JwtException e) {
-            System.out.println("❌ Token validation failed: " + e.getMessage());
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.getWriter().write("Token validation failed: " + e.getMessage());
-            return false;
         }
+
+        chain.doFilter(request, response);
     }
 }

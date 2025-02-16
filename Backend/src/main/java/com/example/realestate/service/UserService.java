@@ -17,42 +17,11 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+    
+    
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    public String registerUser(User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            return "Email already exists!";
-        }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encrypt password
-        userRepository.save(user);
-
-        return "User registered successfully!";
-    }
-
-    public String loginUser(String email, String password) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-
-        if (userOptional.isEmpty()) {
-            return null;
-        }
-
-        User user = userOptional.get();
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            return null;
-        }
-
-        // ✅ Generate JWT token with email & role
-        return jwtUtil.generateToken(user.getEmail(), user.getRole());
-    }
-
-    // ✅ Fix: Implement getUserRole method
-    public Role getUserRole(String email) {
-        return userRepository.findByEmail(email)
-                .map(User::getRole)
-                .orElse(Role.BUYER); // Default role if not found
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
 }

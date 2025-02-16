@@ -1,14 +1,10 @@
 package com.example.realestate.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,16 +49,15 @@ public class User {
 		this.password = password;
 	}
 
-	public Role getRole() {
-		return role;
-	}
-
-	public void setRole(Role role2) {
-		this.role = role2;
-	}
+	
 
 	private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+	private String role;
+	public String getRole() {
+		return role;
+	}
+	public void setRole(String role) {
+		this.role = role;
+	}
 }

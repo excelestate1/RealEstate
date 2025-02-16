@@ -1,43 +1,63 @@
 package com.example.realestate.controllers;
 
 import com.example.realestate.model.User;
+import com.example.realestate.repository.UserRepository;
+import com.example.realestate.security.JwtFilter;
+import com.example.realestate.security.JwtUtil;
 import com.example.realestate.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/user")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
+	
+	@Autowired
+	private UserRepository userRepository;
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private JwtFilter filter;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        String response = userService.registerUser(user);
-
-        if (response.equals("Email already exists!")) {
-            return ResponseEntity.badRequest().body(Map.of("error", response));
-        }
-
-        return ResponseEntity.ok(Map.of("message", response));
-    }
-
+	public User saveRegister(@RequestBody User user) {
+		return userService.saveUser(user);
+	}
+    
+    
+    
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginRequest) {
-        String email = loginRequest.get("email");
-        String password = loginRequest.get("password");
+	public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginData) {
 
-        String token = userService.loginUser(email, password);
+	    String email = loginData.get("email");
+	    String password = loginData.get("password");
+	    Optional<User> user = userRepository.findByEmail(email);
 
-        if (token == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
-        }
+	    if (user.isPresent() && user.get().getPassword().equals(password)) {
+	        Map<String, String> response = new HashMap<>();
+	        String token = jwtUtil.generateToken(email);
 
-        return ResponseEntity.ok(Map.of("token", token, "role", userService.getUserRole(email)));
-    }
+	        response.put("login", "success");
+	        response.put("token", token);
+	        response.put("role", user.get().getRole());
+	        response.put("username", user.get().getName()); 
+	        response.put("id", String.valueOf(user.get().getId())); 
+
+	        return ResponseEntity.ok(response);
+	    } else {
+	        Map<String, String> response1 = new HashMap<>();
+	        response1.put("login", "fail");
+	        return ResponseEntity.status(401).body(response1);
+	    }
+	}
 }
