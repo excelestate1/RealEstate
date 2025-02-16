@@ -1,7 +1,28 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, TextField, Typography, Box, Paper } from "@mui/material";
-import { loginUser } from "../Services/User";
+
+const loginUser = async (email, password) => {
+  try {
+    const response = await fetch("http://localhost:9090/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Login failed");
+    }
+
+    return data;
+  } catch (error) {
+    return { error: error.message };
+  }
+};
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -26,9 +47,13 @@ const Login = () => {
       if (response.error) {
         setError(response.error);
       } else {
-        localStorage.setItem("token", response.token); // Store token
-        localStorage.setItem("role", response.role); // Store role
+        // Store user details in localStorage
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("role", response.role);
+        localStorage.setItem("id", response.id);
+        localStorage.setItem("username", response.username);
 
+        // Redirect based on role
         if (response.role === "ADMIN") {
           navigate("/admin");
         } else if (response.role === "BUYER") {
@@ -49,13 +74,37 @@ const Login = () => {
           Login
         </Typography>
         <form onSubmit={handleSubmit}>
-          <TextField fullWidth label="Email" name="email" type="email" value={formData.email} onChange={handleChange} error={!!errors.email} helperText={errors.email} margin="normal" />
-          <TextField fullWidth label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={!!errors.password} helperText={errors.password} margin="normal" />
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={!!errors.email}
+            helperText={errors.email}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            error={!!errors.password}
+            helperText={errors.password}
+            margin="normal"
+          />
           <Button fullWidth variant="contained" color="primary" sx={{ mt: 2 }} type="submit">
             Login
           </Button>
         </form>
-        {error && <Typography color="error" align="center" sx={{ mt: 2 }}>{error}</Typography>}
+        {error && (
+          <Typography color="error" align="center" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
         <Typography align="center" sx={{ mt: 2 }}>
           <Link to="/register">Don't have an account? Register</Link>
         </Typography>
