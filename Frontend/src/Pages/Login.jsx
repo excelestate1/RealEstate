@@ -40,33 +40,41 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    const response = await loginUser(formData.email, formData.password);
+  
+    if (response.error) {
+      setError(response.error);
+    } else {
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("role", response.role);
+      localStorage.setItem("id", response.id);
+      localStorage.setItem("username", response.username);
+      console.log("Stored Token:", localStorage.getItem("token"));
+console.log("Stored Role:", localStorage.getItem("role"));
+console.log("Stored ID:", localStorage.getItem("id"));
+console.log("Stored Username:", localStorage.getItem("username"));
 
-    try {
-      const response = await loginUser(formData.email, formData.password);
-
-      if (response.error) {
-        setError(response.error);
-      } else {
-        // Store user details in localStorage
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("role", response.role);
-        localStorage.setItem("id", response.id);
-        localStorage.setItem("username", response.username);
-
-        // Redirect based on role
-        if (response.role === "ADMIN") {
+  
+      console.log("User Logged In:", response); // Debugging
+  
+      switch (response.role) {
+        case "ADMIN":
           navigate("/admin");
-        } else if (response.role === "BUYER") {
+          break;
+        case "BUYER":
           navigate("/buy");
-        } else if (response.role === "SELLER" || response.role === "AGENT") {
+          break;
+        case "SELLER":
+        case "AGENT":
           navigate("/sell");
-        }
+          break;
+        default:
+          navigate("/");
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
     }
   };
-
+  
   return (
     <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
       <Paper elevation={3} sx={{ p: 4, width: 400 }}>

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface PropertyRepository extends JpaRepository<Property, Long> {
     List<Property> findBySellerId(Long sellerId);
+    List<Property> findByType(String type);
 }

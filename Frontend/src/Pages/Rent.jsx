@@ -1,229 +1,169 @@
-import React, { useState, useEffect } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Grid,
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
-  IconButton,
-  Rating,
-} from "@mui/material";
-import { Favorite, FavoriteBorder, ChevronLeft, ChevronRight } from "@mui/icons-material";
-
-// Importing images from local assets
-
-import rentImage1 from "../assets/images/c1.jpg";
-import rentImage2 from "../assets/images/c2.jpg";
-import rentImage3 from "../assets/images/c3.jpg";
-import rentImage4 from "../assets/images/c4.jpg";
-import rentImage5 from "../assets/images/c5.jpg";
-import rentImage6 from "../assets/images/c6.jpg";
-import rentImage7 from "../assets/images/c7.jpg";
-import rentImage8 from "../assets/images/c8.jpg";
-import rentImage9 from "../assets/images/d1.jpg";
-import rentImage10 from "../assets/images/d2.jpg";
-import rentImage11 from "../assets/images/d3.jpg";
-import rentImage12 from "../assets/images/d4.jpg";
-import rentImage13 from "../assets/images/d5.jpg";
-import rentImage14 from "../assets/images/d6.jpg";
-import rentImage15 from "../assets/images/d7.jpg";
-import rentImage16 from "../assets/images/d8.jpg";
-import rentImage17 from "../assets/images/d9.jpg";
-
+import { useState, useEffect } from "react";
+import { Box, Typography, Card, CardContent, Button, Snackbar, Alert, TextField, Grid } from "@mui/material";
+import { Link } from "react-router-dom"; // Import Link
 
 const Rent = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [wishlist, setWishlist] = useState(new Set());
-  const [ratings, setRatings] = useState({});
-  const [imageIndex, setImageIndex] = useState({}); // Manage the current index of the images for each property
+  const [properties, setProperties] = useState([]);
+  const [filteredProperties, setFilteredProperties] = useState([]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [propertyNameSearch, setPropertyNameSearch] = useState("");
+  const [priceSearch, setPriceSearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
 
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      title: "Cottage in Bibury",
-      rent: "$1500/month",
-      images: [rentImage1, rentImage2, rentImage3, rentImage4, rentImage5, rentImage6, rentImage7, rentImage8 ], // Multiple images for this property
-      location: "Downtown",
-    },
-    {
-      id: 2,
-      title: "Market Drayton",
-      rent: "$1200/month",
-      images: [rentImage9, rentImage10, rentImage11, rentImage12, rentImage13, rentImage14, rentImage15, rentImage16, rentImage17], // Multiple images for this property
-      location: "New York",
-    },
-  ]);
+  const token = localStorage.getItem("token"); // Retrieve token from localStorage
 
-  // Initialize imageIndex with default values
   useEffect(() => {
-    const initialImageIndex = {};
-    properties.forEach((property) => {
-      initialImageIndex[property.id] = 0; // Set the initial index to 0 for each property
-    });
-    setImageIndex(initialImageIndex);
-  }, [properties]);
+    if (!token) {
+      setSnackbarMessage("Please log in to view properties.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
-  const handleSearchChange = (event) => setSearchQuery(event.target.value);
+    const fetchProperties = async () => {
+      try {
+        const response = await fetch("http://localhost:9090/property/type/RENT", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
 
-  // Toggle Wishlist
-  const toggleWishlist = (id) => {
-    setWishlist((prev) => {
-      const newWishlist = new Set(prev);
-      newWishlist.has(id) ? newWishlist.delete(id) : newWishlist.add(id);
-      return newWishlist;
+        if (!response.ok) {
+          throw new Error("Failed to fetch properties");
+        }
+
+        const data = await response.json();
+        if (data.error) {
+          setSnackbarMessage(data.message || "Error fetching properties.");
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+        } else {
+          setProperties(data); // Assuming response returns an array of properties
+          setFilteredProperties(data);
+        }
+      } catch (error) {
+        console.error(error);
+        setSnackbarMessage("An error occurred while fetching properties.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    };
+
+    fetchProperties();
+  }, [token]);
+
+  const handleSearchChange = () => {
+    const filtered = properties.filter((property) => {
+      return (
+        property.propertyName.toLowerCase().includes(propertyNameSearch.toLowerCase()) &&
+        property.price.toString().includes(priceSearch) &&
+        property.location.toLowerCase().includes(locationSearch.toLowerCase())
+      );
     });
+
+    setFilteredProperties(filtered);
   };
 
-  // Handle Rating Change
-  const handleRatingChange = (id, newValue) => {
-    setRatings((prev) => ({ ...prev, [id]: newValue }));
-  };
+  useEffect(() => {
+    handleSearchChange(); // Filter properties every time any search field changes
+  }, [propertyNameSearch, priceSearch, locationSearch]);
 
-  // Change to Next Image
-  const handleNextImage = (id) => {
-    setImageIndex((prev) => {
-      const currentIndex = prev[id] || 0;
-      const property = properties.find((prop) => prop.id === id);
-      const nextIndex = (currentIndex + 1) % property.images.length;
-      return { ...prev, [id]: nextIndex };
-    });
-  };
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // Change to Previous Image
-  const handlePrevImage = (id) => {
-    setImageIndex((prev) => {
-      const currentIndex = prev[id] || 0;
-      const property = properties.find((prop) => prop.id === id);
-      const prevIndex = (currentIndex - 1 + property.images.length) % property.images.length;
-      return { ...prev, [id]: prevIndex };
-    });
+  const handleViewDetails = (propertyId) => {
+    localStorage.setItem("propertyId", propertyId); // Store propertyId in localStorage
   };
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" gutterBottom sx={{ color: "white", textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)" }}>
-        Rent Properties
-      </Typography>
-      <Typography variant="h6" paragraph sx={{ color: "white", textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)" }}>
-        Browse rental listings in your area.
-      </Typography>
+      <Typography variant="h4" gutterBottom>Available Properties for Sale</Typography>
 
-      {/* Search Bar */}
-      <TextField
-        label="Search by Location or Rent Price"
-        variant="outlined"
-        value={searchQuery}
-        onChange={handleSearchChange}
-        fullWidth
-        margin="normal"
-      />
+      {/* Search Bar Sections */}
+      <Box sx={{ display: "flex", gap: 2, marginBottom: 2 }}>
+        <TextField
+          label="Search by Property Name"
+          fullWidth
+          value={propertyNameSearch}
+          onChange={(e) => setPropertyNameSearch(e.target.value)}
+        />
+        <TextField
+          label="Search by Price"
+          fullWidth
+          value={priceSearch}
+          onChange={(e) => setPriceSearch(e.target.value)}
+        />
+        <TextField
+          label="Search by Location"
+          fullWidth
+          value={locationSearch}
+          onChange={(e) => setLocationSearch(e.target.value)}
+        />
+      </Box>
 
-      {/* Filtered rental properties */}
-      <Grid container spacing={2}>
-        {properties
-          .filter(
-            (property) =>
-              property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              property.location.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-          .map((property) => (
-            <Grid item xs={12} sm={6} md={4} key={property.id}>
-              <Card>
-                <Box position="relative">
-                  {/* Main Property Image */}
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={property.images[imageIndex[property.id] || 0]}
-                    alt={property.title}
-                    onError={() => console.error(`Error loading image for ${property.title}`)} // Image loading error handler
-                  />
-
-                  {/* Left Arrow Button */}
-                  {property.images.length > 1 && (
-                    <IconButton
-                      onClick={() => handlePrevImage(property.id)}
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: 10,
-                        transform: "translateY(-50%)",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)", // Dark background for contrast
-                        borderRadius: "50%", // Ensures the button is circular
-                        padding: "8px", // Reduced padding for smaller button
-                        minWidth: "40px", // Smaller circular button size
-                        minHeight: "40px", // Smaller circular button size
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        color: "white", // Text color for contrast
-                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.3)", // Subtle shadow for better visibility
-                      }}
-                    >
-                      <ChevronLeft sx={{ fontSize: 30 }} />
-                    </IconButton>
-                  )}
-
-                  {/* Right Arrow Button */}
-                  {property.images.length > 1 && (
-                    <IconButton
-                      onClick={() => handleNextImage(property.id)}
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        right: 10,
-                        transform: "translateY(-50%)",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)", // Dark background for contrast
-                        borderRadius: "50%", // Ensures the button is circular
-                        padding: "8px", // Reduced padding for smaller button
-                        minWidth: "40px", // Smaller circular button size
-                        minHeight: "40px", // Smaller circular button size
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        color: "white", // Text color for contrast
-                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.3)", // Subtle shadow for better visibility
-                      }}
-                    >
-                      <ChevronRight sx={{ fontSize: 30 }} />
-                    </IconButton>
-                  )}
-
-                  {/* Wishlist Button */}
-                  <IconButton
-                    onClick={() => toggleWishlist(property.id)}
-                    sx={{ position: "absolute", top: 10, right: 10, color: "red" }}
-                  >
-                    {wishlist.has(property.id) ? <Favorite /> : <FavoriteBorder />}
-                  </IconButton>
-                </Box>
-
+      {filteredProperties.length > 0 ? (
+        <Grid container spacing={2} justifyContent="space-between">
+          {filteredProperties.map((property) => (
+            <Grid item xs={12} sm={6} md={3} key={property.id}>
+              <Card sx={{
+                maxWidth: 345,
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                "&:hover": { transform: "scale(1.05)", boxShadow: 6 },
+                borderRadius: 2,
+                border: "1px solid #ddd"
+              }}>
                 <CardContent>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="h6">{property.title}</Typography>
-
-                    {/* Rating System */}
-                    <Rating
-                      value={ratings[property.id] || 0}
-                      onChange={(event, newValue) => handleRatingChange(property.id, newValue)}
+                  {/* Display Image */}
+                  {property.image && (
+                    <img
+                      src={property.image}
+                      alt={property.propertyName}
+                      style={{
+                        width: "100%",
+                        height: "200px", // Fixed height for consistent image size
+                        objectFit: "cover", // Ensures image is not distorted
+                        marginBottom: 10,
+                        border: "2px solid #ddd", // Adding border around images
+                        borderRadius: "8px", // Optional: rounding the image corners
+                      }}
                     />
-                  </Box>
+                  )}
 
-                  <Typography variant="body1">{property.location}</Typography>
-                  <Typography variant="body2">{property.rent}</Typography>
+                  <Typography variant="h6" sx={{ marginBottom: 1 }}>
+                    {property.propertyName}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 1 }}>
+                    {property.location}
+                  </Typography>
+                  <Typography variant="body1" color="textPrimary" sx={{ marginBottom: 1 }}>
+                    Price: ${property.price}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 2 }}>
+                    {property.description}
+                  </Typography>
 
-                  {/* View Details Button */}
-                  <Button variant="contained" color="primary" sx={{ marginTop: 2 }}>
-                    View Details
-                  </Button>
+                  {/* Link to View Details */}
+                  <Link to="/viewdetails">
+                    <Button variant="contained" color="primary" sx={{ marginTop: 2 }}>
+                      View Details
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </Grid>
           ))}
-      </Grid>
+        </Grid>
+      ) : (
+        <Typography variant="h6" color="textSecondary">No properties found matching the search criteria.</Typography>
+      )}
+
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
